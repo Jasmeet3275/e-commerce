@@ -2,20 +2,20 @@
 
 ## 1. Tech Stack
 
-| Layer | Choice | Why |
-|---|---|---|
-| Framework | Next.js (App Router, TS) | SSR + hydration, file-based routing, Route Handlers double as the mock backend |
-| Server state | TanStack Query | Caching, retries, dedupe, SSR hydration boundary |
-| Client state | Zustand | Cart + session state, split into domain stores |
-| Styling | Tailwind CSS | Fast, consistent, small bundle |
-| HTTP client | Axios | Interceptors for auth header injection + 401 refresh-and-retry |
-| Validation | Zod | Shared schema for forms and API boundary validation |
-| Forms | React Hook Form + Zod resolver | Checkout/address forms |
-| Virtualization | `@tanstack/react-virtual` | Product grid stays cheap at any catalog size |
-| Offline caching | Service Worker + Cache Storage API | Disk-backed cache of app shell, product API responses, images — survives an offline reload |
-| Analytics + observability | PostHog | Journey events, session capture, error capture |
-| Payment | Mocked | Client-side fake tokenizer — §6 |
-| Testing | Jest + Cypress | Jest: unit (stores, utils, schemas). Cypress: component + E2E |
+| Layer                     | Choice                             | Why                                                                                        |
+| ------------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------ |
+| Framework                 | Next.js (App Router, TS)           | SSR + hydration, file-based routing, Route Handlers double as the mock backend             |
+| Server state              | TanStack Query                     | Caching, retries, dedupe, SSR hydration boundary                                           |
+| Client state              | Zustand                            | Cart + session state, split into domain stores                                             |
+| Styling                   | Tailwind CSS                       | Fast, consistent, small bundle                                                             |
+| HTTP client               | Axios                              | Interceptors for auth header injection + 401 refresh-and-retry                             |
+| Validation                | Zod                                | Shared schema for forms and API boundary validation                                        |
+| Forms                     | React Hook Form + Zod resolver     | Checkout/address forms                                                                     |
+| Virtualization            | `@tanstack/react-virtual`          | Product grid stays cheap at any catalog size                                               |
+| Offline caching           | Service Worker + Cache Storage API | Disk-backed cache of app shell, product API responses, images — survives an offline reload |
+| Analytics + observability | PostHog                            | Journey events, session capture, error capture                                             |
+| Payment                   | Mocked                             | Client-side fake tokenizer — §6                                                            |
+| Testing                   | Jest + Cypress                     | Jest: unit (stores, utils, schemas). Cypress: component + E2E                              |
 
 ## 2. Rendering Strategy
 
@@ -43,12 +43,13 @@ app/
     orders/[id]/cancel/route.ts
     journey/route.ts
   layout.tsx
-middleware.ts
+proxy.ts
 components/
   ui/            Button, Input, Card, Skeleton, Modal, FormField
   product/       ProductCard, VirtualizedProductGrid
   cart/  checkout/
 lib/
+  cn.ts          clsx + tailwind-merge helper — cn.test.ts
   api/           axios instance + interceptors
   services/      client-side typed API calls per domain — used by TanStack Query hooks
     productService.ts  productService.test.ts
@@ -98,16 +99,16 @@ Address   { line1, line2?, city, postalCode, country }
 
 ## 5. API Contract (mock backend, in-memory store)
 
-| Route | Method | Notes |
-|---|---|---|
-| `/api/products` | GET | `?limit&offset`, `Cache-Control: public, max-age=60, stale-while-revalidate=300` |
-| `/api/products/:id` | GET | same cache policy |
-| `/api/auth/login` | POST | sets httpOnly refresh cookie, returns access token |
-| `/api/auth/refresh` | POST | reads refresh cookie, returns new access token |
-| `/api/auth/logout` | POST | clears refresh cookie |
-| `/api/journey` | GET/POST | server-side snapshot of cart + in-progress checkout form, keyed by session — what a shared link resumes from |
-| `/api/orders` | POST | places an order from the current cart |
-| `/api/orders/:id/cancel` | POST | immediate cancel, any time, auth required |
+| Route                    | Method   | Notes                                                                                                        |
+| ------------------------ | -------- | ------------------------------------------------------------------------------------------------------------ |
+| `/api/products`          | GET      | `?limit&offset`, `Cache-Control: public, max-age=60, stale-while-revalidate=300`                             |
+| `/api/products/:id`      | GET      | same cache policy                                                                                            |
+| `/api/auth/login`        | POST     | sets httpOnly refresh cookie, returns access token                                                           |
+| `/api/auth/refresh`      | POST     | reads refresh cookie, returns new access token                                                               |
+| `/api/auth/logout`       | POST     | clears refresh cookie                                                                                        |
+| `/api/journey`           | GET/POST | server-side snapshot of cart + in-progress checkout form, keyed by session — what a shared link resumes from |
+| `/api/orders`            | POST     | places an order from the current cart                                                                        |
+| `/api/orders/:id/cancel` | POST     | immediate cancel, any time, auth required                                                                    |
 
 All mutating routes: Zod-validated body, auth re-checked server-side regardless of UI gating.
 
@@ -131,18 +132,18 @@ Offset-based (`limit/offset`) pagination via `useInfiniteQuery`, rendered throug
 
 ## 9. Caching
 
-| What | Where | Strategy |
-|---|---|---|
-| Product list/detail responses (online) | `Cache-Control` header + TanStack Query | 60s fresh, 300s stale-while-revalidate; CDN-cacheable (public, non-personalized) |
-| Product responses + images (offline reload) | Service Worker → Cache Storage | `sw.js` intercepts `fetch`: stale-while-revalidate for `/api/products*`, cache-first for images. Disk-backed, grows only with what's been viewed. `fetch()` is intercepted transparently, so TanStack Query needs no separate persister |
-| Cart / checkout draft | Zustand `persist` (localStorage) | survives reload/offline |
-| Server-side journey truth | in-memory store, keyed by session | resolved when a shared link is opened |
+| What                                        | Where                                   | Strategy                                                                                                                                                                                                                                |
+| ------------------------------------------- | --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Product list/detail responses (online)      | `Cache-Control` header + TanStack Query | 60s fresh, 300s stale-while-revalidate; CDN-cacheable (public, non-personalized)                                                                                                                                                        |
+| Product responses + images (offline reload) | Service Worker → Cache Storage          | `sw.js` intercepts `fetch`: stale-while-revalidate for `/api/products*`, cache-first for images. Disk-backed, grows only with what's been viewed. `fetch()` is intercepted transparently, so TanStack Query needs no separate persister |
+| Cart / checkout draft                       | Zustand `persist` (localStorage)        | survives reload/offline                                                                                                                                                                                                                 |
+| Server-side journey truth                   | in-memory store, keyed by session       | resolved when a shared link is opened                                                                                                                                                                                                   |
 
 ## 10. Auth & Direct-Link Redirect (PRD FR #6)
 
 - Access token: short-lived JWT, in memory (Zustand), sent as `Authorization: Bearer` via an Axios request interceptor.
 - Refresh token: httpOnly + Secure + SameSite=Strict cookie, invisible to JS. On 401, the response interceptor calls `/api/auth/refresh` once and retries.
-- `middleware.ts` verifies the JWT at the edge (`jose`) for any deep link:
+- `proxy.ts` (`proxy()` — Next.js 16 renamed `middleware`/`middleware.ts`; runs on the Node.js runtime, edge is no longer supported for it) verifies the JWT via `jose` for any deep link:
   - Valid session → proceeds to the target page.
   - No/invalid session → redirect to `/login?redirect=<originalPath>` (allowlisted path, no open-redirect); after login, sent to `redirect`.
 - Gating is UX convenience only — every Route Handler re-validates the token server-side.
@@ -178,4 +179,5 @@ All via `next/image` — no hand-built pipeline:
 - No oversized source downloads — `next/image` requests only the size a given viewport needs.
 
 ---
-*Next: `CLAUDE.md` — operating instructions/conventions for building this repo with Claude Code.*
+
+_Next: `CLAUDE.md` — operating instructions/conventions for building this repo with Claude Code._
