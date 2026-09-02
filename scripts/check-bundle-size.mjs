@@ -6,7 +6,12 @@ import { readFileSync } from "node:fs";
 import { glob } from "node:fs/promises";
 import { gzipSync } from "node:zlib";
 
-const BUDGET_BYTES = 350 * 1024; // 350KB gzipped, starting budget — raise deliberately as features land
+// 460KB gzipped — raised from the original 350KB starting budget in Story 10
+// after posthog-js's session-recording engine (rrweb) pushed real usage to
+// ~422KB; rrweb alone accounts for ~260KB of shipped JS. Verified this is
+// real feature cost, not accidental bloat, before raising: rest of the app
+// is lean. Raise deliberately as features land — don't bump reflexively.
+const BUDGET_BYTES = 460 * 1024;
 const CHUNKS_GLOB = ".next/static/chunks/**/*.js";
 
 let totalBytes = 0;
