@@ -32,9 +32,17 @@ export function Header() {
 
   return (
     <header className="flex items-center justify-between border-b border-neutral-200 px-4 py-3">
-      <Link href="/products" className="text-lg font-semibold text-neutral-900">
-        Shop
-      </Link>
+      <div className="flex items-center gap-4">
+        <Link href="/products" className="text-lg font-semibold text-neutral-900">
+          Shop
+        </Link>
+        {isAuthenticated && user && (
+          <div className="flex items-center gap-2">
+            <Avatar name={user.name} imageUrl={user.avatarUrl} />
+            <span className="text-sm text-neutral-700">{user.name}</span>
+          </div>
+        )}
+      </div>
       <div className="flex items-center gap-4">
         <Link href="/cart" className="relative text-sm text-neutral-700 hover:text-neutral-900">
           Cart
@@ -47,22 +55,16 @@ export function Header() {
             </span>
           )}
         </Link>
-        {isAuthenticated && user ? (
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
-              <Avatar name={user.name} imageUrl={user.avatarUrl} />
-              <span className="text-sm text-neutral-700">{user.name}</span>
-            </div>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={isLoggingOut}
-              onClick={handleLogout}
-            >
-              {isLoggingOut ? "Logging out…" : "Log out"}
-            </Button>
-          </div>
+        {isAuthenticated ? (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={isLoggingOut}
+            onClick={handleLogout}
+          >
+            {isLoggingOut ? "Logging out…" : "Log out"}
+          </Button>
         ) : (
           <Link href="/login">
             <Button type="button" variant="outline" size="sm">
