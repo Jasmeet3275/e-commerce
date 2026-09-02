@@ -1,8 +1,8 @@
 import type { Mock } from "vitest";
 
 import { api } from "@/lib/api/axios";
-import { getProducts } from "@/lib/services/productService";
-import type { ProductList } from "@/types/product";
+import { getProductDetail, getProducts } from "@/lib/services/productService";
+import type { ProductDetail, ProductList } from "@/types/product";
 
 vi.mock("@/lib/api/axios", () => ({
   api: { get: vi.fn() },
@@ -28,5 +28,25 @@ describe("getProducts", () => {
 
     expect(mockedGet).toHaveBeenCalledWith("/products", { params: { limit: 20, offset: 0 } });
     expect(result).toEqual(productList);
+  });
+});
+
+describe("getProductDetail", () => {
+  it("requests /products/:id and returns the data", async () => {
+    const detail: ProductDetail = {
+      id: "product-1",
+      name: "Classic Backpack",
+      imageUrl: "/x.svg",
+      price: 100,
+      discount: 0,
+      description: "A great backpack.",
+      images: ["/x.svg", "/y.svg", "/z.svg"],
+    };
+    mockedGet.mockResolvedValueOnce({ data: detail });
+
+    const result = await getProductDetail("product-1");
+
+    expect(mockedGet).toHaveBeenCalledWith("/products/product-1");
+    expect(result).toEqual(detail);
   });
 });
