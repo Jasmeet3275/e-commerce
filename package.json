@@ -9,6 +9,7 @@
     "lint": "eslint .",
     "typegen": "next typegen",
     "typecheck": "next typegen && tsc --noEmit",
+    "typecheck:cypress": "tsc --noEmit -p cypress/tsconfig.json",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
