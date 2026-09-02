@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 
+import { OrderSummaryCard } from "@/components/checkout/OrderSummaryCard";
 import { Button } from "@/components/ui/Button";
 import { track } from "@/lib/analytics/posthog";
 import { cancelOrder } from "@/lib/services/orderService";
@@ -29,15 +30,24 @@ export function OrderConfirmation({ order, onCancelled }: OrderConfirmationProps
   }
 
   return (
-    <div className="flex flex-col items-center gap-4 py-16 text-center">
-      <h2 className="text-xl font-semibold">{isCancelled ? "Order cancelled" : "Order placed!"}</h2>
-      <p className="text-neutral-600">
-        Order{" "}
-        <span data-testid="order-id" className="font-mono">
-          {order.id}
-        </span>{" "}
-        {isCancelled ? "has been cancelled." : "is on its way."}
-      </p>
+    <div className="flex flex-col items-center gap-6 py-16 text-center">
+      <div className="flex flex-col items-center gap-2">
+        <h2 className="text-xl font-semibold">
+          {isCancelled ? "Order cancelled" : "Order placed!"}
+        </h2>
+        <p className="text-neutral-600">
+          Order{" "}
+          <span data-testid="order-id" className="font-mono">
+            {order.id}
+          </span>{" "}
+          {isCancelled ? "has been cancelled." : "is on its way."}
+        </p>
+      </div>
+
+      <div className="w-full max-w-sm text-left">
+        <OrderSummaryCard items={order.items} />
+      </div>
+
       <div className="flex gap-3">
         {!isCancelled && (
           <Button

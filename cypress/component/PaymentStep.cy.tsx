@@ -48,8 +48,15 @@ describe("<PaymentStep />", () => {
   it("shows the shipping address and order summary", () => {
     mountStep(cy.stub(), cy.stub());
     cy.contains("1 Main St");
-    cy.contains("Classic Backpack × 2");
+    cy.contains("Classic Backpack");
+    cy.contains("Qty 2");
     cy.contains("$200.00");
+  });
+
+  it("shows the cart total and carries it onto the submit button", () => {
+    mountStep(cy.stub(), cy.stub());
+    cy.get("[data-testid=order-total]").should("have.text", "$200.00");
+    cy.contains("button", "Place order — $200.00").should("exist");
   });
 
   it("calls onEditAddress when Edit address is clicked", () => {

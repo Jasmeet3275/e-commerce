@@ -2,30 +2,17 @@
 
 import { useState, type SubmitEvent } from "react";
 
+import { OrderSummaryCard } from "@/components/checkout/OrderSummaryCard";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { FormField } from "@/components/ui/FormField";
 import { Input } from "@/components/ui/Input";
 import { track } from "@/lib/analytics/posthog";
 import { mockPaymentProvider } from "@/lib/payment/mockPaymentProvider";
-import { useProductDetailQuery } from "@/lib/query/useProductDetailQuery";
+import { useCartTotal } from "@/lib/query/useCartTotal";
 import { placeOrder } from "@/lib/services/orderService";
 import type { CartItem } from "@/types/cart";
 import type { Address, Order } from "@/types/order";
-
-function OrderSummaryLine({ item }: { item: CartItem }) {
-  const { data: product } = useProductDetailQuery(item.productId);
-  if (!product) return null;
-
-  return (
-    <li className="flex justify-between text-sm text-neutral-700">
-      <span>
-        {product.name} × {item.count}
-      </span>
-      <span>${(product.price * item.count).toFixed(2)}</span>
-    </li>
-  );
-}
 
 export type PaymentStepProps = {
   items: CartItem[];
@@ -35,6 +22,7 @@ export type PaymentStepProps = {
 };
 
 export function PaymentStep({ items, address, onEditAddress, onPlaced }: PaymentStepProps) {
+  const { total } = useCartTotal(items);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -71,42 +59,38 @@ export function PaymentStep({ items, address, onEditAddress, onPlaced }: Payment
         </Button>
       </Card>
 
-      <Card>
-        <h2 className="mb-2 text-sm font-medium text-neutral-900">Order summary</h2>
-        <ul className="flex flex-col gap-1">
-          {items.map((item) => (
-            <OrderSummaryLine key={item.productId} item={item} />
-          ))}
-        </ul>
-      </Card>
+      <OrderSummaryCard items={items} />
 
-      <form onSubmit={handlePlaceOrder} className="flex flex-col gap-4">
-        <FormField label="Card number" htmlFor="cardNumber">
-          <Input
-            id="cardNumber"
-            inputMode="numeric"
-            autoComplete="off"
-            placeholder="4242 4242 4242 4242"
-            required
-          />
-        </FormField>
-        <div className="flex gap-4">
-          <FormField label="Expiry" htmlFor="expiry" className="flex-1">
-            <Input id="expiry" autoComplete="off" placeholder="MM/YY" required />
+      <Card>
+        <h2 className="mb-4 text-sm font-medium text-neutral-900">Payment</h2>
+        <form onSubmit={handlePlaceOrder} className="flex flex-col gap-4">
+          <FormField label="Card number" htmlFor="cardNumber">
+            <Input
+              id="cardNumber"
+              inputMode="numeric"
+              autoComplete="off"
+              placeholder="4242 4242 4242 4242"
+              required
+            />
           </FormField>
-          <FormField label="CVC" htmlFor="cvc" className="flex-1">
-            <Input id="cvc" inputMode="numeric" autoComplete="off" placeholder="123" required />
-          </FormField>
-        </div>
-        {error && (
-          <p role="alert" className="text-sm text-red-600">
-            {error}
-          </p>
-        )}
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Placing order…" : "Place order"}
-        </Button>
-      </form>
+          <div className="flex gap-4">
+            <FormField label="Expiry" htmlFor="expiry" className="flex-1">
+              <Input id="expiry" autoComplete="off" placeholder="MM/YY" required />
+            </FormField>
+            <FormField label="CVC" htmlFor="cvc" className="flex-1">
+              <Input id="cvc" inputMode="numeric" autoComplete="off" placeholder="123" required />
+            </FormField>
+          </div>
+          {error && (
+            <p role="alert" className="text-sm text-red-600">
+              {error}
+            </p>
+          )}
+          <Button type="submit" disabled={isSubmitting} className="mt-2">
+            {isSubmitting ? "Placing order…" : `Place order — $${total.toFixed(2)}`}
+          </Button>
+        </form>
+      </Card>
     </div>
   );
 }

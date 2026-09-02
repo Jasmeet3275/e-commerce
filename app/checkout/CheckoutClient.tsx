@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { AddressForm } from "@/components/checkout/AddressForm";
+import { CheckoutSteps } from "@/components/checkout/CheckoutSteps";
 import { OrderConfirmation } from "@/components/checkout/OrderConfirmation";
 import { PaymentStep } from "@/components/checkout/PaymentStep";
 import { Button } from "@/components/ui/Button";
@@ -30,7 +31,12 @@ export function CheckoutClient() {
   }, [initialItemCount]);
 
   if (placedOrder) {
-    return <OrderConfirmation order={placedOrder} onCancelled={setPlacedOrder} />;
+    return (
+      <>
+        <CheckoutSteps current={3} />
+        <OrderConfirmation order={placedOrder} onCancelled={setPlacedOrder} />
+      </>
+    );
   }
 
   if (items.length === 0) {
@@ -46,26 +52,32 @@ export function CheckoutClient() {
 
   if (!address || isEditingAddress) {
     return (
-      <AddressForm
-        defaultValues={address ?? undefined}
-        onSubmit={(value) => {
-          setAddress(value);
-          setIsEditingAddress(false);
-        }}
-      />
+      <>
+        <CheckoutSteps current={1} />
+        <AddressForm
+          defaultValues={address ?? undefined}
+          onSubmit={(value) => {
+            setAddress(value);
+            setIsEditingAddress(false);
+          }}
+        />
+      </>
     );
   }
 
   return (
-    <PaymentStep
-      items={items}
-      address={address}
-      onEditAddress={() => setIsEditingAddress(true)}
-      onPlaced={(order) => {
-        setPlacedOrder(order);
-        clearCart();
-        clearCheckout();
-      }}
-    />
+    <>
+      <CheckoutSteps current={2} />
+      <PaymentStep
+        items={items}
+        address={address}
+        onEditAddress={() => setIsEditingAddress(true)}
+        onPlaced={(order) => {
+          setPlacedOrder(order);
+          clearCart();
+          clearCheckout();
+        }}
+      />
+    </>
   );
 }

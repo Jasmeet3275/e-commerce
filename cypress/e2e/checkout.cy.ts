@@ -41,13 +41,15 @@ describe("Checkout", () => {
     cy.contains("button", "Continue to payment").click();
 
     cy.contains("Classic Backpack");
+    cy.get("[data-testid=order-total]").should("have.text", "$15.00"); // product-1 is $15
     cy.get("#cardNumber").type("4242424242424242");
     cy.get("#expiry").type("12/30");
     cy.get("#cvc").type("123");
-    cy.contains("button", "Place order").click();
+    cy.contains("button", "Place order — $15.00").click();
 
     cy.contains("Order placed!");
     cy.get("[data-testid=order-id]").should("not.be.empty");
+    cy.get("[data-testid=order-total]").should("have.text", "$15.00");
 
     cy.contains("a", "Continue shopping").click();
     cy.url().should("include", "/products");
