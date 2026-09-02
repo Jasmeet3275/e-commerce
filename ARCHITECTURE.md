@@ -2,20 +2,20 @@
 
 ## 1. Tech Stack
 
-| Layer                     | Choice                             | Why                                                                                        |
-| ------------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------ |
-| Framework                 | Next.js (App Router, TS)           | SSR + hydration, file-based routing, Route Handlers double as the mock backend             |
-| Server state              | TanStack Query                     | Caching, retries, dedupe, SSR hydration boundary                                           |
-| Client state              | Zustand                            | Cart + session state, split into domain stores                                             |
-| Styling                   | Tailwind CSS                       | Fast, consistent, small bundle                                                             |
-| HTTP client               | Axios                              | Interceptors for auth header injection + 401 refresh-and-retry                             |
-| Validation                | Zod                                | Shared schema for forms and API boundary validation                                        |
-| Forms                     | React Hook Form + Zod resolver     | Checkout/address forms                                                                     |
-| Virtualization            | `@tanstack/react-virtual`          | Product grid stays cheap at any catalog size                                               |
-| Offline caching           | Service Worker + Cache Storage API | Disk-backed cache of app shell, product API responses, images — survives an offline reload |
-| Analytics + observability | PostHog                            | Journey events, session capture, error capture                                             |
-| Payment                   | Mocked                             | Client-side fake tokenizer — §6                                                            |
-| Testing                   | Jest + Cypress                     | Jest: unit (stores, utils, schemas). Cypress: component + E2E                              |
+| Layer                     | Choice                             | Why                                                                                                                              |
+| ------------------------- | ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| Framework                 | Next.js (App Router, TS)           | SSR + hydration, file-based routing, Route Handlers double as the mock backend                                                   |
+| Server state              | TanStack Query                     | Caching, retries, dedupe, SSR hydration boundary                                                                                 |
+| Client state              | Zustand                            | Cart + session state, split into domain stores                                                                                   |
+| Styling                   | Tailwind CSS                       | Fast, consistent, small bundle                                                                                                   |
+| HTTP client               | Axios                              | Interceptors for auth header injection + 401 refresh-and-retry                                                                   |
+| Validation                | Zod                                | Shared schema for forms and API boundary validation                                                                              |
+| Forms                     | React Hook Form + Zod resolver     | Checkout/address forms                                                                                                           |
+| Virtualization            | `@tanstack/react-virtual`          | Product grid stays cheap at any catalog size                                                                                     |
+| Offline caching           | Service Worker + Cache Storage API | Disk-backed cache of app shell, product API responses, images — survives an offline reload                                       |
+| Analytics + observability | PostHog                            | Journey events, session capture, error capture                                                                                   |
+| Payment                   | Mocked                             | Client-side fake tokenizer — §6                                                                                                  |
+| Testing                   | Vitest + Cypress                   | Vitest: unit (stores, utils, schemas) — native ESM, no transform fights with ESM-only deps like `jose`. Cypress: component + E2E |
 
 ## 2. Rendering Strategy
 
@@ -77,8 +77,8 @@ data/products.ts   seeded mock catalog
 types/
 cypress/{e2e,component}/
 public/sw.js       app-shell precache; cache-first images; stale-while-revalidate /api/products*
-jest.config.ts
-jest.setup.ts
+vitest.config.mts
+vitest.setup.ts
 ```
 
 Unit tests are colocated `*.test.ts` next to source, not a mirrored `__tests__` tree.
@@ -163,7 +163,7 @@ PostHog client in `lib/analytics/`, single `track(event, props)` call site for j
 
 ## 13. Testing
 
-- **Jest (unit)** — Zustand store actions, `lib/services` request shaping, Zod schemas, `server/services` business logic, auth token utils.
+- **Vitest (unit)** — Zustand store actions, `lib/services` request shaping, Zod schemas, `server/services` business logic, auth token utils.
 - **Cypress component** — design-system primitives, `ProductCard`, cart item row, virtualized grid.
 - **Cypress E2E** — browse → detail → add to cart → checkout redirect (unauthenticated) → login → back on checkout → place order → cancel order; cancel-from-cart not disturbing checkout draft.
 

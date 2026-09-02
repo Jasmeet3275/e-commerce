@@ -10,7 +10,7 @@ Operating instructions for Claude Code in this repo. Read `PRD.md` (what/why) an
 - `pnpm build` — production build (validates SSR/types across all routes)
 - `pnpm lint` — ESLint
 - `pnpm typecheck` — `tsc --noEmit`
-- `pnpm test` — Jest unit tests
+- `pnpm test` — Vitest unit tests
 - `pnpm cypress:component` — Cypress component tests
 - `pnpm cypress:e2e` — Cypress E2E (requires `dev` running)
 
@@ -20,8 +20,8 @@ Package manager: pnpm (per the actual scaffold — `packageManager` pin in `pack
 
 - Work is broken into stories (feature areas), each into small commits (types → mock data/API → service → UI → tests) — Conventional Commits format (`feat(auth): ...`, `test(cart): ...`).
 - **pre-commit** (Husky + lint-staged, staged files only): ESLint --fix, Prettier, `tsc --noEmit`. Fast, local, no build.
-- **pre-push**: full Jest suite with a coverage gate (`jest.config.ts` → `coverageThreshold`, 70% to start).
-- **CI** (GitHub Actions): Jest + coverage, Cypress E2E, `next build` + a bundle-size budget. Coverage and bundle-size are evaluated at PR/CI level, not per commit — a commit can legitimately be partial work mid-story.
+- **pre-push**: full Vitest suite with a coverage gate (`vitest.config.mts` → `coverage.thresholds`, 70% to start).
+- **CI** (GitHub Actions): Vitest + coverage, Cypress E2E, `next build` + a bundle-size budget. Coverage and bundle-size are evaluated at PR/CI level, not per commit — a commit can legitimately be partial work mid-story.
 
 ## Conventions
 

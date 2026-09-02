@@ -12,7 +12,7 @@ Read in that order before making non-trivial changes.
 
 ## Tech Stack
 
-Next.js (App Router, TS) · Zustand · TanStack Query · Tailwind · Axios · Zod · Jest + Cypress · PostHog. Payment and journey-nudge (WhatsApp-style) integrations are mocked behind clean interfaces — see `ARCHITECTURE.md` §6/§9. Full rationale in `ARCHITECTURE.md` §1.
+Next.js (App Router, TS) · Zustand · TanStack Query · Tailwind · Axios · Zod · Vitest + Cypress · PostHog. Payment and journey-nudge (WhatsApp-style) integrations are mocked behind clean interfaces — see `ARCHITECTURE.md` §6/§9. Full rationale in `ARCHITECTURE.md` §1.
 
 ## Getting Started
 
@@ -22,7 +22,7 @@ cp .env.example .env.local   # fill in JWT_SECRET, NEXT_PUBLIC_POSTHOG_KEY, NEXT
 pnpm dev
 ```
 
-Other commands — see `CLAUDE.md` for the full list (lint, typecheck, Jest, Cypress).
+Other commands — see `CLAUDE.md` for the full list (lint, typecheck, Vitest, Cypress).
 
 ## How AI Was Used
 
