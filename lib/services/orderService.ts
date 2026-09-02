@@ -6,3 +6,8 @@ export async function placeOrder(input: PlaceOrderInput): Promise<Order> {
   const response = await api.post<Order>("/orders", input);
   return response.data;
 }
+
+export async function cancelOrder(orderId: string): Promise<Order> {
+  const response = await api.post<Order>(`/orders/${orderId}/cancel`);
+  return response.data;
+}
