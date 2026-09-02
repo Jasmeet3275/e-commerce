@@ -26,7 +26,13 @@ export default defineConfig({
         "proxy.ts",
         // React hooks (use*.ts) are render-context-bound like components, even
         // though they're .ts not .tsx — covered by Cypress component/E2E tests.
-        "**/use*.ts",
+        // Scoped to lib/query/ and components/ specifically — NOT lib/store/,
+        // since Zustand stores share the "use" naming convention for component
+        // consumption but are plain testable objects (getState()/setState()),
+        // no render context needed. A blanket "**/use*.ts" glob incorrectly
+        // excluded lib/store/useAuthStore.ts's coverage since Story 2.
+        "lib/query/use*.ts",
+        "components/**/use*.ts",
         // Type-only declaration files, no runtime logic to cover.
         "types/**",
         "*.config.{ts,js,mjs}",
