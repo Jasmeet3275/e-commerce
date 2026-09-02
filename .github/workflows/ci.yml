@@ -8,6 +8,11 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      # Throwaway value for this ephemeral CI run only — not a real secret.
+      # Needed at runtime (not build time) by /api/auth/* for JWT signing,
+      # exercised for real by the E2E suite below.
+      JWT_SECRET: ci-test-secret-not-for-production-use-32bytes
     steps:
       - uses: actions/checkout@v4
 
