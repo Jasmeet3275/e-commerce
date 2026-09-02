@@ -1,11 +1,16 @@
 "use client";
 
 import Image from "next/image";
+import { useState } from "react";
 
+import { Button } from "@/components/ui/Button";
 import { useProductDetailQuery } from "@/lib/query/useProductDetailQuery";
+import { useCartStore } from "@/lib/store/useCartStore";
 
 export function ProductDetailClient({ id }: { id: string }) {
   const { data: product } = useProductDetailQuery(id);
+  const addItem = useCartStore((state) => state.addItem);
+  const [justAdded, setJustAdded] = useState(false);
 
   if (!product) return null; // SSR hydration should already have this cached; defensive fallback only
 
@@ -13,6 +18,12 @@ export function ProductDetailClient({ id }: { id: string }) {
   const discountedPrice = hasDiscount
     ? Math.round(product.price * (1 - product.discount / 100) * 100) / 100
     : product.price;
+
+  function handleAddToCart() {
+    addItem(id);
+    setJustAdded(true);
+    setTimeout(() => setJustAdded(false), 1500);
+  }
 
   return (
     <main className="mx-auto flex max-w-4xl flex-col gap-6 p-4 sm:flex-row">
@@ -49,14 +60,9 @@ export function ProductDetailClient({ id }: { id: string }) {
           )}
         </div>
         <p className="text-neutral-600">{product.description}</p>
-        <button
-          type="button"
-          disabled
-          title="Cart lands in Story 4"
-          className="mt-2 rounded bg-brand-600 px-4 py-2 text-white opacity-50"
-        >
-          Add to cart
-        </button>
+        <Button type="button" onClick={handleAddToCart} className="mt-2 self-start">
+          {justAdded ? "Added!" : "Add to cart"}
+        </Button>
       </div>
     </main>
   );
