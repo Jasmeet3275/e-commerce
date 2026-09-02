@@ -1,6 +1,7 @@
 describe("Home page", () => {
-  it("loads and renders the placeholder heading", () => {
+  it("redirects to the product listing", () => {
     cy.visit("/");
-    cy.get("h1").contains("Shop");
+    cy.url().should("include", "/products");
+    cy.get("h1").contains("Products");
   });
 });
