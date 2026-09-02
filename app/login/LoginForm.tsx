@@ -3,6 +3,9 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, type SubmitEvent } from "react";
 
+import { Button } from "@/components/ui/Button";
+import { FormField } from "@/components/ui/FormField";
+import { Input } from "@/components/ui/Input";
 import { safeRedirectPath } from "@/lib/auth/redirect";
 import { login } from "@/lib/services/authService";
 import { useAuthStore } from "@/lib/store/useAuthStore";
@@ -35,40 +38,34 @@ export function LoginForm() {
   return (
     <form onSubmit={handleSubmit} className="flex w-full max-w-sm flex-col gap-4">
       <h1 className="text-2xl font-semibold">Log in</h1>
-      <label className="flex flex-col gap-1">
-        <span className="text-sm text-neutral-600">Email</span>
-        <input
+      <FormField label="Email" htmlFor="email">
+        <Input
+          id="email"
           type="email"
           required
           autoComplete="email"
           value={email}
           onChange={(event) => setEmail(event.target.value)}
-          className="rounded border border-neutral-300 px-3 py-2"
         />
-      </label>
-      <label className="flex flex-col gap-1">
-        <span className="text-sm text-neutral-600">Password</span>
-        <input
+      </FormField>
+      <FormField label="Password" htmlFor="password">
+        <Input
+          id="password"
           type="password"
           required
           autoComplete="current-password"
           value={password}
           onChange={(event) => setPassword(event.target.value)}
-          className="rounded border border-neutral-300 px-3 py-2"
         />
-      </label>
+      </FormField>
       {error && (
         <p role="alert" className="text-sm text-red-600">
           {error}
         </p>
       )}
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        className="rounded bg-brand-600 px-4 py-2 text-white disabled:opacity-50"
-      >
+      <Button type="submit" disabled={isSubmitting}>
         {isSubmitting ? "Logging in…" : "Log in"}
-      </button>
+      </Button>
     </form>
   );
 }
