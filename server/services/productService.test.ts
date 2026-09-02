@@ -1,4 +1,4 @@
-import { listProducts } from "@/server/services/productService";
+import { getProductDetail, listProducts } from "@/server/services/productService";
 
 describe("listProducts", () => {
   it("returns the first page with correct pagination metadata", () => {
@@ -37,5 +37,17 @@ describe("listProducts", () => {
     const result = listProducts({ limit: 5, offset: 0 });
     expect(result.items).toHaveLength(5);
     expect(result.pagination.totalPages).toBe(30);
+  });
+});
+
+describe("getProductDetail", () => {
+  it("returns the detail for a known product", () => {
+    const detail = getProductDetail("product-1");
+    expect(detail?.id).toBe("product-1");
+    expect(detail?.images).toHaveLength(3);
+  });
+
+  it("returns undefined for an unknown product", () => {
+    expect(getProductDetail("nope")).toBeUndefined();
   });
 });
