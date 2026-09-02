@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useState, type SubmitEvent } from "react";
 
 import { Button } from "@/components/ui/Button";
@@ -11,7 +11,6 @@ import { login } from "@/lib/services/authService";
 import { useAuthStore } from "@/lib/store/useAuthStore";
 
 export function LoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const setSession = useAuthStore((state) => state.setSession);
 
@@ -27,7 +26,12 @@ export function LoginForm() {
     try {
       const session = await login({ email, password });
       setSession(session.accessToken, session.user);
-      router.push(safeRedirectPath(searchParams.get("redirect")));
+      // Hard navigation, not router.push: the refresh_token cookie was just
+      // set by the server, but Next's client Router Cache has no visibility
+      // into that — a prior unauthenticated visit to the redirect target can
+      // leave a stale "middleware redirected to /login" entry cached, which
+      // router.push would silently reuse instead of re-checking auth.
+      window.location.href = safeRedirectPath(searchParams.get("redirect"));
     } catch {
       setError("Invalid email or password.");
     } finally {
