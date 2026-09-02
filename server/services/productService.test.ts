@@ -40,6 +40,32 @@ describe("listProducts", () => {
   });
 });
 
+describe("listProducts with search", () => {
+  it("filters by a case-insensitive substring match on name", () => {
+    const result = listProducts({ limit: 50, offset: 0, search: "backpack" });
+    expect(result.items).toHaveLength(10);
+    expect(result.items.every((item) => item.name.toLowerCase().includes("backpack"))).toBe(true);
+    expect(result.pagination.totalItems).toBe(10);
+  });
+
+  it("is case-insensitive", () => {
+    const result = listProducts({ limit: 50, offset: 0, search: "BACKPACK" });
+    expect(result.pagination.totalItems).toBe(10);
+  });
+
+  it("returns no items for a non-matching search", () => {
+    const result = listProducts({ limit: 50, offset: 0, search: "zzzznotfound" });
+    expect(result.items).toHaveLength(0);
+    expect(result.pagination.totalItems).toBe(0);
+    expect(result.pagination.totalPages).toBe(1);
+  });
+
+  it("recalculates pagination based on the filtered count, not the full catalog", () => {
+    const result = listProducts({ limit: 5, offset: 0, search: "backpack" });
+    expect(result.pagination.totalPages).toBe(2); // 10 matches / 5 per page
+  });
+});
+
 describe("getProductDetail", () => {
   it("returns the detail for a known product", () => {
     const detail = getProductDetail("product-1");

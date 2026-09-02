@@ -39,4 +39,10 @@ describe("GET /api/products", () => {
     const response = await GET(makeRequest("?offset=-1"));
     expect(response.status).toBe(400);
   });
+
+  it("filters by the search query param", async () => {
+    const response = await GET(makeRequest("?search=backpack"));
+    const body = await response.json();
+    expect(body.pagination.totalItems).toBe(10);
+  });
 });
