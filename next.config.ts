@@ -1,12 +1,17 @@
 import type { NextConfig } from "next";
 
+const isDev = process.env.NODE_ENV !== "production";
+
 const securityHeaders = [
   {
     key: "Content-Security-Policy",
     value: [
       "default-src 'self'",
       // TODO(auth story): switch to a per-request nonce via proxy.ts and drop 'unsafe-inline'
-      "script-src 'self' 'unsafe-inline'",
+      // 'unsafe-eval' is dev-only: React's dev-mode debugging (component
+      // stack reconstruction, Fast Refresh) requires it; production React
+      // never calls eval().
+      `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob:",
       "font-src 'self'",
