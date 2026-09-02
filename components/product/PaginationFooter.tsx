@@ -5,13 +5,18 @@ import { cn } from "@/lib/cn";
 export type PaginationFooterProps = {
   currentPage: number;
   totalPages: number;
+  search?: string;
 };
 
-function pageHref(page: number): string {
-  return page <= 1 ? "/products" : `/products?page=${page}`;
+function pageHref(page: number, search?: string): string {
+  const params = new URLSearchParams();
+  if (page > 1) params.set("page", String(page));
+  if (search) params.set("q", search);
+  const query = params.toString();
+  return query ? `/products?${query}` : "/products";
 }
 
-export function PaginationFooter({ currentPage, totalPages }: PaginationFooterProps) {
+export function PaginationFooter({ currentPage, totalPages, search }: PaginationFooterProps) {
   if (totalPages <= 1) return null;
 
   const pages = Array.from({ length: totalPages }, (_, index) => index + 1);
@@ -24,7 +29,7 @@ export function PaginationFooter({ currentPage, totalPages }: PaginationFooterPr
       className="mt-6 flex flex-wrap items-center justify-center gap-2"
     >
       <Link
-        href={pageHref(currentPage - 1)}
+        href={pageHref(currentPage - 1, search)}
         aria-disabled={isFirstPage}
         tabIndex={isFirstPage ? -1 : undefined}
         className={cn(
@@ -37,7 +42,7 @@ export function PaginationFooter({ currentPage, totalPages }: PaginationFooterPr
       {pages.map((page) => (
         <Link
           key={page}
-          href={pageHref(page)}
+          href={pageHref(page, search)}
           aria-current={page === currentPage ? "page" : undefined}
           className={cn(
             "rounded border px-3 py-1.5 text-sm",
@@ -50,7 +55,7 @@ export function PaginationFooter({ currentPage, totalPages }: PaginationFooterPr
         </Link>
       ))}
       <Link
-        href={pageHref(currentPage + 1)}
+        href={pageHref(currentPage + 1, search)}
         aria-disabled={isLastPage}
         tabIndex={isLastPage ? -1 : undefined}
         className={cn(

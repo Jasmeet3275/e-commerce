@@ -28,4 +28,12 @@ describe("<PaginationFooter />", () => {
     cy.contains("a", "Previous").should("have.attr", "href", "/products");
     cy.contains("a", "Next").should("have.attr", "href", "/products?page=3");
   });
+
+  it("preserves the active search term in every page link", () => {
+    cy.mount(<PaginationFooter currentPage={2} totalPages={3} search="backpack" />);
+    cy.contains("a", "1").should("have.attr", "href", "/products?q=backpack");
+    cy.contains("a", "3").should("have.attr", "href", "/products?page=3&q=backpack");
+    cy.contains("a", "Previous").should("have.attr", "href", "/products?q=backpack");
+    cy.contains("a", "Next").should("have.attr", "href", "/products?page=3&q=backpack");
+  });
 });

@@ -45,7 +45,7 @@ app/
 proxy.ts
 components/
   ui/            Button, Input, Card, Skeleton, Modal, FormField
-  product/       ProductCard, ProductGrid, PaginationFooter
+  product/       ProductCard, ProductGrid, PaginationFooter, SearchBar
   cart/  checkout/
 lib/
   cn.ts          clsx + tailwind-merge helper — cn.test.ts
@@ -100,7 +100,7 @@ Address   { line1, line2?, city, postalCode, country }
 
 | Route                    | Method   | Notes                                                                                                        |
 | ------------------------ | -------- | ------------------------------------------------------------------------------------------------------------ |
-| `/api/products`          | GET      | `?limit&offset`, `Cache-Control: public, max-age=60, stale-while-revalidate=300`                             |
+| `/api/products`          | GET      | `?limit&offset&search`, `Cache-Control: public, max-age=60, stale-while-revalidate=300`                      |
 | `/api/products/:id`      | GET      | same cache policy                                                                                            |
 | `/api/auth/login`        | POST     | sets httpOnly refresh cookie, returns access token                                                           |
 | `/api/auth/refresh`      | POST     | reads refresh cookie, returns new access token                                                               |
@@ -125,9 +125,11 @@ All mutating routes: Zod-validated body, auth re-checked server-side regardless 
 - Cart and checkout-draft changes debounce-sync to `/api/journey`, so a dropped session resolves correctly from a shared link on any device.
 - Route Handlers: parse/validate, call `server/services/*`, shape the response.
 
-## 8. Pagination
+## 8. Pagination & Search
 
 Offset-based (`limit/offset`), 50 items/page, driven by a `?page=` search param — not infinite scroll. Each page is a distinct SSR'd, crawlable URL with its own numbered `PaginationFooter` links (real `<a href>`s, not JS-only buttons), so the full catalog is indexable and works with JS disabled. No virtualization: 50 plain DOM nodes per page is cheap enough on its own, and virtualizing an infinite-scroll feed was the actual cost driver — removed along with it. Images lazy-load via `next/image`, skeleton until loaded.
+
+Search follows the same pattern: `SearchBar` is a plain `<form method="GET">` (no client component, no fetch) submitting `?q=` — server-side case-insensitive substring match on `name` in `listProducts`, filtered before the pagination math so `totalPages`/`totalItems` reflect the result set, not the full catalog. `PaginationFooter` carries `q` through its page links so paging through search results doesn't lose the term.
 
 ## 9. Caching
 

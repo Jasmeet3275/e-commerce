@@ -23,6 +23,28 @@ describe("Product listing", () => {
     cy.get('meta[name="robots"]').should("have.attr", "content").and("include", "noindex");
   });
 
+  it("searches products by name via the search bar", () => {
+    cy.visit("/products");
+    cy.get("input[name=q]").type("Sneakers");
+    cy.contains("button", "Search").click();
+    cy.url().should("include", "/products?q=Sneakers");
+    cy.contains("Classic Sneakers");
+    cy.contains("Classic Backpack").should("not.exist");
+  });
+
+  it("shows a no-results message for a non-matching search", () => {
+    cy.visit("/products?q=zzznotfound");
+    cy.contains("No products found");
+    cy.contains("zzznotfound");
+  });
+
+  it("clears the search and returns to the full catalog", () => {
+    cy.visit("/products?q=Sneakers");
+    cy.contains("a", "Clear").click();
+    cy.url().should("not.include", "q=");
+    cy.contains("Classic Backpack");
+  });
+
   it("serves product responses with the documented Cache-Control header", () => {
     cy.request("/api/products").then((response) => {
       expect(response.headers["cache-control"]).to.eq(
