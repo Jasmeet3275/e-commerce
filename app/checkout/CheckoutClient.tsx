@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { AddressForm } from "@/components/checkout/AddressForm";
 import { OrderConfirmation } from "@/components/checkout/OrderConfirmation";
 import { PaymentStep } from "@/components/checkout/PaymentStep";
 import { Button } from "@/components/ui/Button";
+import { track } from "@/lib/analytics/posthog";
 import { useCartStore } from "@/lib/store/useCartStore";
 import { useCheckoutStore } from "@/lib/store/useCheckoutStore";
 import type { Order } from "@/types/order";
@@ -19,6 +20,14 @@ export function CheckoutClient() {
   const clearCheckout = useCheckoutStore((state) => state.clear);
   const [placedOrder, setPlacedOrder] = useState<Order | null>(null);
   const [isEditingAddress, setIsEditingAddress] = useState(false);
+  // Snapshot the item count at mount, not a reactive read of `items` — this
+  // event means "the user landed on checkout with something to buy", fired
+  // once, not every time the cart changes while checkout is open.
+  const [initialItemCount] = useState(() => items.length);
+
+  useEffect(() => {
+    if (initialItemCount > 0) track("checkout_started", { itemCount: initialItemCount });
+  }, [initialItemCount]);
 
   if (placedOrder) {
     return <OrderConfirmation order={placedOrder} onCancelled={setPlacedOrder} />;

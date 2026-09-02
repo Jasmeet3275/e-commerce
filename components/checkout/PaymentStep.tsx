@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useState, type SubmitEvent } from "react";
 
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { FormField } from "@/components/ui/FormField";
 import { Input } from "@/components/ui/Input";
+import { track } from "@/lib/analytics/posthog";
 import { mockPaymentProvider } from "@/lib/payment/mockPaymentProvider";
 import { useProductDetailQuery } from "@/lib/query/useProductDetailQuery";
 import { placeOrder } from "@/lib/services/orderService";
@@ -37,7 +38,7 @@ export function PaymentStep({ items, address, onEditAddress, onPlaced }: Payment
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function handlePlaceOrder(event: FormEvent) {
+  async function handlePlaceOrder(event: SubmitEvent) {
     event.preventDefault();
     setError(null);
     setIsSubmitting(true);
@@ -47,6 +48,7 @@ export function PaymentStep({ items, address, onEditAddress, onPlaced }: Payment
       // from a mounted card element the app never sees raw values from.
       const { token } = await mockPaymentProvider.tokenize();
       const order = await placeOrder({ items, address, paymentToken: token });
+      track("order_placed", { orderId: order.id, itemCount: items.length });
       onPlaced(order);
     } catch {
       setError("Could not place your order. Please try again.");

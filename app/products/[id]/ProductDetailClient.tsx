@@ -1,9 +1,10 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/Button";
+import { track } from "@/lib/analytics/posthog";
 import { useProductDetailQuery } from "@/lib/query/useProductDetailQuery";
 import { useCartStore } from "@/lib/store/useCartStore";
 
@@ -11,6 +12,10 @@ export function ProductDetailClient({ id }: { id: string }) {
   const { data: product } = useProductDetailQuery(id);
   const addItem = useCartStore((state) => state.addItem);
   const [justAdded, setJustAdded] = useState(false);
+
+  useEffect(() => {
+    if (product) track("product_viewed", { productId: product.id, productName: product.name });
+  }, [product]);
 
   if (!product) return null; // SSR hydration should already have this cached; defensive fallback only
 
@@ -21,6 +26,7 @@ export function ProductDetailClient({ id }: { id: string }) {
 
   function handleAddToCart() {
     addItem(id);
+    track("added_to_cart", { productId: id });
     setJustAdded(true);
     setTimeout(() => setJustAdded(false), 1500);
   }

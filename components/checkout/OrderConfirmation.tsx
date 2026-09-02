@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/Button";
+import { track } from "@/lib/analytics/posthog";
 import { cancelOrder } from "@/lib/services/orderService";
 import type { Order } from "@/types/order";
 
@@ -19,7 +20,9 @@ export function OrderConfirmation({ order, onCancelled }: OrderConfirmationProps
   async function handleCancelOrder() {
     setIsCancelling(true);
     try {
-      onCancelled(await cancelOrder(order.id));
+      const cancelled = await cancelOrder(order.id);
+      track("order_cancelled", { orderId: cancelled.id });
+      onCancelled(cancelled);
     } finally {
       setIsCancelling(false);
     }
