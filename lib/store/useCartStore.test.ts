@@ -40,6 +40,13 @@ describe("useCartStore", () => {
     expect(useCartStore.getState().items).toEqual([{ productId: "product-2", count: 1 }]);
   });
 
+  it("clears all items", () => {
+    useCartStore.getState().addItem("product-1");
+    useCartStore.getState().addItem("product-2");
+    useCartStore.getState().clearCart();
+    expect(useCartStore.getState().items).toEqual([]);
+  });
+
   it("persists items to localStorage", () => {
     useCartStore.getState().addItem("product-1");
     const stored = JSON.parse(localStorage.getItem("cart-storage") ?? "{}");

@@ -17,7 +17,7 @@ export type VirtualizedProductGridProps = {
   onLoadMore: () => void;
 };
 
-const ROW_HEIGHT_ESTIMATE = 320;
+const ROW_HEIGHT_ESTIMATE = 400;
 const LOAD_MORE_THRESHOLD_PX = 2 * ROW_HEIGHT_ESTIMATE;
 
 export function VirtualizedProductGrid({
