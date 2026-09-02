@@ -1,4 +1,4 @@
-import type { Product } from "@/types/product";
+import type { Product, ProductDetail } from "@/types/product";
 
 const ADJECTIVES = [
   "Classic",
@@ -65,4 +65,21 @@ export function getProducts(): Product[] {
 
 export function getProductById(id: string): Product | undefined {
   return products.find((product) => product.id === id);
+}
+
+export function getProductDetailById(id: string): ProductDetail | undefined {
+  const product = getProductById(id);
+  if (!product) return undefined;
+
+  const baseImageIndex = products.indexOf(product) % PLACEHOLDER_COUNT;
+  const galleryImages = Array.from({ length: 3 }, (_, offset) => {
+    const index = (baseImageIndex + offset) % PLACEHOLDER_COUNT;
+    return `/products/placeholder-${index + 1}.svg`;
+  });
+
+  return {
+    ...product,
+    description: `The ${product.name} is built for everyday use — a reliable pick whether you're at home, at work, or on the move. Thoughtfully designed with quality materials that hold up over time.`,
+    images: galleryImages,
+  };
 }
