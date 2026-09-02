@@ -26,7 +26,13 @@ export function shouldRetryWithRefresh(
 
 let refreshPromise: Promise<AuthSession> | null = null;
 
-async function refreshSession(): Promise<AuthSession> {
+// Exported for SessionBootstrap: on app load there's no access token in
+// memory yet (it's never persisted — CLAUDE.md guardrail), but the httpOnly
+// refresh cookie may still be valid from an earlier session. Reusing this
+// (rather than a separate call) also means a bootstrap attempt and a
+// reactive 401-triggered refresh around the same time share one request via
+// the refreshPromise de-dupe below, instead of firing twice.
+export async function refreshSession(): Promise<AuthSession> {
   refreshPromise ??= axios
     .post<AuthSession>("/api/auth/refresh")
     .then((response) => response.data)

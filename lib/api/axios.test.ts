@@ -3,6 +3,7 @@ import axios, { AxiosError, AxiosHeaders, type InternalAxiosRequestConfig } from
 import {
   api,
   attachAuthHeader,
+  refreshSession,
   shouldRetryWithRefresh,
   type RetriableConfig,
 } from "@/lib/api/axios";
@@ -85,6 +86,28 @@ function withFakeAdapter(config: RetriableConfig, data: unknown): RetriableConfi
     }),
   };
 }
+
+describe("refreshSession", () => {
+  beforeEach(() => vi.restoreAllMocks());
+
+  it("posts to /api/auth/refresh directly, bypassing the api instance's interceptors", async () => {
+    const postSpy = vi
+      .spyOn(axios, "post")
+      .mockResolvedValue({ data: { accessToken: "new-token", user: demoUser } });
+
+    const session = await refreshSession();
+
+    expect(postSpy).toHaveBeenCalledWith("/api/auth/refresh");
+    expect(session).toEqual({ accessToken: "new-token", user: demoUser });
+  });
+
+  it("rejects when there is no valid refresh cookie", async () => {
+    const refreshError = new Error("no refresh cookie");
+    vi.spyOn(axios, "post").mockRejectedValue(refreshError);
+
+    await expect(refreshSession()).rejects.toBe(refreshError);
+  });
+});
 
 describe("response interceptor (401 refresh-and-retry)", () => {
   beforeEach(() => {
