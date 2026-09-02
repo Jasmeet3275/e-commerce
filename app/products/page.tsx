@@ -1,37 +1,41 @@
-import { dehydrate, HydrationBoundary, QueryClient } from "@tanstack/react-query";
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 
-import { ProductListClient } from "@/app/products/ProductListClient";
-import { productKeys } from "@/lib/query/keys";
-import { PRODUCTS_PAGE_SIZE } from "@/lib/query/useProductsQuery";
+import { PaginationFooter } from "@/components/product/PaginationFooter";
+import { ProductGrid } from "@/components/product/ProductGrid";
+import { productsPageParamSchema } from "@/lib/validation/productSchema";
 import { listProducts } from "@/server/services/productService";
 
-export const metadata: Metadata = {
-  title: "Products",
-};
+const PRODUCTS_PAGE_SIZE = 50;
 
-export default async function ProductsPage() {
-  const queryClient = new QueryClient();
+function parsePage(searchParamsPage: string | string[] | undefined): number {
+  const raw = Array.isArray(searchParamsPage) ? searchParamsPage[0] : searchParamsPage;
+  return productsPageParamSchema.parse(raw);
+}
 
-  // prefetchInfiniteQuery is deprecated in favor of the unified infiniteQuery()
-  // method (TanStack Query 5.102+) — errors are swallowed per that method's own
-  // guidance, since a failed prefetch shouldn't crash the page render; the
-  // client-side hook will just fetch it itself on mount instead.
-  await queryClient
-    .infiniteQuery({
-      queryKey: productKeys.list(PRODUCTS_PAGE_SIZE),
-      queryFn: ({ pageParam }) =>
-        listProducts({ limit: PRODUCTS_PAGE_SIZE, offset: pageParam as number }),
-      initialPageParam: 0,
-    })
-    .catch(() => undefined);
+export async function generateMetadata({
+  searchParams,
+}: PageProps<"/products">): Promise<Metadata> {
+  const { page } = await searchParams;
+  const pageNumber = parsePage(page);
+  return {
+    title: pageNumber > 1 ? `Products — Page ${pageNumber}` : "Products",
+  };
+}
+
+export default async function ProductsPage({ searchParams }: PageProps<"/products">) {
+  const { page } = await searchParams;
+  const pageNumber = parsePage(page);
+  const offset = (pageNumber - 1) * PRODUCTS_PAGE_SIZE;
+
+  const { items, pagination } = listProducts({ limit: PRODUCTS_PAGE_SIZE, offset });
+  if (pageNumber > 1 && pageNumber > pagination.totalPages) notFound();
 
   return (
-    <HydrationBoundary state={dehydrate(queryClient)}>
-      <main className="p-4">
-        <h1 className="mb-4 text-2xl font-semibold">Products</h1>
-        <ProductListClient />
-      </main>
-    </HydrationBoundary>
+    <main className="p-4">
+      <h1 className="mb-4 text-2xl font-semibold">Products</h1>
+      <ProductGrid products={items} />
+      <PaginationFooter currentPage={pagination.currentPage} totalPages={pagination.totalPages} />
+    </main>
   );
 }

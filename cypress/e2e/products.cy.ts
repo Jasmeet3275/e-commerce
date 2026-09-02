@@ -6,13 +6,21 @@ describe("Product listing", () => {
     cy.contains("Classic Backpack");
   });
 
-  it("loads more products as the user scrolls (infinite query + virtualization)", () => {
+  it("navigates to page 2 via the pagination footer, a real SSR'd page", () => {
     cy.visit("/products");
     cy.contains("Classic Backpack"); // product-1, first item of page 1
-    // Scrolling to the bottom of what's currently loaded (page 1) should
-    // trigger fetchNextPage and pull in page 2.
-    cy.get("[data-testid=product-grid-scroll]").scrollTo("bottom");
-    cy.contains("Classic Water Bottle", { timeout: 10000 }); // product-21, first item of page 2
+    cy.contains("nav[aria-label='Product pages'] a", "2").click();
+    cy.url().should("include", "/products?page=2");
+    cy.contains("Classic Headphones"); // product-51, first item of page 2
+    cy.get("a[aria-current=page]").should("have.text", "2");
+  });
+
+  it("404s for a page number beyond the last page", () => {
+    cy.request({ url: "/products?page=999", failOnStatusCode: false }).then((response) => {
+      expect(response.status).to.eq(200); // Next's soft-404: 200 + noindex, metadata already streamed
+    });
+    cy.visit("/products?page=999", { failOnStatusCode: false });
+    cy.get('meta[name="robots"]').should("have.attr", "content").and("include", "noindex");
   });
 
   it("serves product responses with the documented Cache-Control header", () => {

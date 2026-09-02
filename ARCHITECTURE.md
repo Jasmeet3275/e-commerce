@@ -11,7 +11,6 @@
 | HTTP client               | Axios                              | Interceptors for auth header injection + 401 refresh-and-retry                                                                   |
 | Validation                | Zod                                | Shared schema for forms and API boundary validation                                                                              |
 | Forms                     | React Hook Form + Zod resolver     | Checkout/address forms                                                                                                           |
-| Virtualization            | `@tanstack/react-virtual`          | Product grid stays cheap at any catalog size                                                                                     |
 | Offline caching           | Service Worker + Cache Storage API | Disk-backed cache of app shell, product API responses, images — survives an offline reload                                       |
 | Analytics + observability | PostHog                            | Journey events, session capture, error capture                                                                                   |
 | Payment                   | Mocked                             | Client-side fake tokenizer — §6                                                                                                  |
@@ -21,7 +20,7 @@
 
 Every route SSRs its initial data server-side, then hydrates into TanStack Query client-side. Subsequent interaction (pagination, cart, forms) is client-driven, no full reloads.
 
-- `/products` — SSR first page → `HydrationBoundary` → `useInfiniteQuery` + virtualization.
+- `/products` — fully SSR'd per page, offset pagination via `?page=` (§8) — no client-side query, no virtualization.
 - `/products/[id]` — SSR + `generateMetadata` (title/description/JSON-LD).
 - `/cart`, `/checkout` — CSR, `noindex`. Data is client-owned (Zustand/localStorage), so there's nothing to SSR. App Router still serves a server-rendered shell for fast paint on a cold entry (e.g. WhatsApp deep-link); contents then load client-side from Zustand or `/api/journey`.
 - `/login` — CSR.
@@ -46,7 +45,7 @@ app/
 proxy.ts
 components/
   ui/            Button, Input, Card, Skeleton, Modal, FormField
-  product/       ProductCard, VirtualizedProductGrid
+  product/       ProductCard, ProductGrid, PaginationFooter
   cart/  checkout/
 lib/
   cn.ts          clsx + tailwind-merge helper — cn.test.ts
@@ -126,9 +125,9 @@ All mutating routes: Zod-validated body, auth re-checked server-side regardless 
 - Cart and checkout-draft changes debounce-sync to `/api/journey`, so a dropped session resolves correctly from a shared link on any device.
 - Route Handlers: parse/validate, call `server/services/*`, shape the response.
 
-## 8. Pagination & Virtualization
+## 8. Pagination
 
-Offset-based (`limit/offset`) pagination via `useInfiniteQuery`, rendered through `@tanstack/react-virtual` so the DOM only holds the visible window regardless of pages fetched. Images lazy-load via `next/image`, skeleton until loaded.
+Offset-based (`limit/offset`), 50 items/page, driven by a `?page=` search param — not infinite scroll. Each page is a distinct SSR'd, crawlable URL with its own numbered `PaginationFooter` links (real `<a href>`s, not JS-only buttons), so the full catalog is indexable and works with JS disabled. No virtualization: 50 plain DOM nodes per page is cheap enough on its own, and virtualizing an infinite-scroll feed was the actual cost driver — removed along with it. Images lazy-load via `next/image`, skeleton until loaded.
 
 ## 9. Caching
 
@@ -164,7 +163,7 @@ PostHog client in `lib/analytics/`, single `track(event, props)` call site for j
 ## 13. Testing
 
 - **Vitest (unit)** — Zustand store actions, `lib/services` request shaping, Zod schemas, `server/services` business logic, auth token utils.
-- **Cypress component** — design-system primitives, `ProductCard`, cart item row, virtualized grid.
+- **Cypress component** — design-system primitives, `ProductCard`, `ProductGrid`, `PaginationFooter`, cart item row.
 - **Cypress E2E** — browse → detail → add to cart → checkout redirect (unauthenticated) → login → back on checkout → place order → cancel order; cancel-from-cart not disturbing checkout draft.
 
 ## 14. Image Delivery & Optimization
