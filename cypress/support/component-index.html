@@ -2,6 +2,16 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <style>
+      html,
+      body,
+      [data-cy-root] {
+        height: 100%;
+      }
+    </style>
+    <!-- next-style-loader (dev mode) inserts styles before this anchor; Next's
+         own dev server auto-injects it, but this bare test HTML needs it explicit. -->
+    <noscript id="__next_css__DO_NOT_USE__"></noscript>
   </head>
   <body>
     <div data-cy-root></div>
