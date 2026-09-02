@@ -53,4 +53,27 @@ describe("Checkout", () => {
     cy.url().should("include", "/products");
     cy.get("[data-testid=cart-count-badge]").should("not.exist");
   });
+
+  it("cancels a just-placed order, any time, no approval step", () => {
+    login();
+    addProductToCart();
+
+    cy.visit("/checkout");
+    cy.get("#line1").type("1 Main St");
+    cy.get("#city").type("Springfield");
+    cy.get("#postalCode").type("12345");
+    cy.get("#country").type("US");
+    cy.contains("button", "Continue to payment").click();
+
+    cy.get("#cardNumber").type("4242424242424242");
+    cy.get("#expiry").type("12/30");
+    cy.get("#cvc").type("123");
+    cy.contains("button", "Place order").click();
+    cy.contains("Order placed!");
+
+    cy.contains("button", "Cancel order").click();
+    cy.contains("Order cancelled");
+    cy.contains("has been cancelled.");
+    cy.contains("button", "Cancel order").should("not.exist");
+  });
 });

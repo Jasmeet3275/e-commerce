@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { AddressForm } from "@/components/checkout/AddressForm";
+import { OrderConfirmation } from "@/components/checkout/OrderConfirmation";
 import { PaymentStep } from "@/components/checkout/PaymentStep";
 import { Button } from "@/components/ui/Button";
 import { useCartStore } from "@/lib/store/useCartStore";
@@ -20,21 +21,7 @@ export function CheckoutClient() {
   const [isEditingAddress, setIsEditingAddress] = useState(false);
 
   if (placedOrder) {
-    return (
-      <div className="flex flex-col items-center gap-4 py-16 text-center">
-        <h2 className="text-xl font-semibold">Order placed!</h2>
-        <p className="text-neutral-600">
-          Order{" "}
-          <span data-testid="order-id" className="font-mono">
-            {placedOrder.id}
-          </span>{" "}
-          is on its way.
-        </p>
-        <Link href="/products">
-          <Button type="button">Continue shopping</Button>
-        </Link>
-      </div>
-    );
+    return <OrderConfirmation order={placedOrder} onCancelled={setPlacedOrder} />;
   }
 
   if (items.length === 0) {
