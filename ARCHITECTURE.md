@@ -86,7 +86,7 @@ Unit tests are colocated `*.test.ts` next to source, not a mirrored `__tests__` 
 ## 4. Data Models
 
 ```ts
-User      { id, name, avatarUrl, country, featureFlags }
+User      { id, name, avatarUrl, country }
 Product   { id, name, imageUrl, price, discount }
 ProductList { items: Product[], pagination: { limit, offset, currentPage, totalPages, totalItems } }
 ProductDetail { id, name, description, images }
