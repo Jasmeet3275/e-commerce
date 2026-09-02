@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 
+import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { logout } from "@/lib/services/authService";
 import { useAuthStore } from "@/lib/store/useAuthStore";
@@ -10,6 +11,7 @@ import { selectTotalCount, useCartStore } from "@/lib/store/useCartStore";
 
 export function Header() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const user = useAuthStore((state) => state.user);
   const clearSession = useAuthStore((state) => state.clear);
   const totalCount = useCartStore(selectTotalCount);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -45,16 +47,28 @@ export function Header() {
             </span>
           )}
         </Link>
-        {isAuthenticated && (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={isLoggingOut}
-            onClick={handleLogout}
-          >
-            {isLoggingOut ? "Logging out…" : "Log out"}
-          </Button>
+        {isAuthenticated && user ? (
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <Avatar name={user.name} imageUrl={user.avatarUrl} />
+              <span className="text-sm text-neutral-700">{user.name}</span>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={isLoggingOut}
+              onClick={handleLogout}
+            >
+              {isLoggingOut ? "Logging out…" : "Log out"}
+            </Button>
+          </div>
+        ) : (
+          <Link href="/login">
+            <Button type="button" variant="outline" size="sm">
+              Log in
+            </Button>
+          </Link>
         )}
       </div>
     </header>

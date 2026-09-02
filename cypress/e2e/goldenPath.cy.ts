@@ -24,7 +24,7 @@ describe("Golden path", () => {
     // Log in
     cy.get("#email").type("demo@example.com");
     cy.get("#password").type("password123");
-    cy.contains("button", "Log in").click();
+    cy.get("form").contains("button", "Log in").click();
 
     // Sent straight back to checkout — the cart survived the login detour
     cy.url().should("include", "/checkout");

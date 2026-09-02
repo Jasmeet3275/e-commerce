@@ -3,7 +3,7 @@ describe("Checkout", () => {
     cy.visit("/login");
     cy.get("#email").type("demo@example.com");
     cy.get("#password").type("password123");
-    cy.contains("button", "Log in").click();
+    cy.get("form").contains("button", "Log in").click();
     cy.url().should("include", "/products");
   }
 
@@ -19,7 +19,7 @@ describe("Checkout", () => {
 
     cy.get("#email").type("demo@example.com");
     cy.get("#password").type("password123");
-    cy.contains("button", "Log in").click();
+    cy.get("form").contains("button", "Log in").click();
     cy.url().should("include", "/checkout");
   });
 

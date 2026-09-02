@@ -26,15 +26,24 @@ describe("<Header />", () => {
     cy.get("[data-testid=cart-count-badge]").should("have.text", "3");
   });
 
-  it("shows no Log out button when unauthenticated", () => {
+  it("shows Log in (not Log out) when unauthenticated", () => {
     cy.mount(<Header />);
     cy.contains("button", "Log out").should("not.exist");
+    cy.contains("a", "Log in").should("have.attr", "href", "/login");
   });
 
-  it("shows Log out when authenticated", () => {
+  it("shows Log out (not Log in) when authenticated", () => {
     useAuthStore.getState().setSession("token-abc", demoUser);
     cy.mount(<Header />);
     cy.contains("button", "Log out").should("exist");
+    cy.contains("a", "Log in").should("not.exist");
+  });
+
+  it("shows the user's avatar and name when authenticated", () => {
+    useAuthStore.getState().setSession("token-abc", demoUser);
+    cy.mount(<Header />);
+    cy.contains("span", "Demo User");
+    cy.contains("span", "D"); // initials fallback avatar — demoUser has no avatarUrl
   });
 
   it("links Cart to /cart", () => {
