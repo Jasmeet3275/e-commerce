@@ -1,4 +1,4 @@
-import { createOrder } from "@/data/orders";
+import { cancelOrder, createOrder } from "@/data/orders";
 import type { PlaceOrderInput } from "@/lib/validation/checkoutSchema";
 
 const input: PlaceOrderInput = {
@@ -26,5 +26,29 @@ describe("createOrder", () => {
     const first = createOrder("user-1", input);
     const second = createOrder("user-1", input);
     expect(first.id).not.toBe(second.id);
+  });
+});
+
+describe("cancelOrder", () => {
+  it("cancels an order owned by the given user", () => {
+    const order = createOrder("user-1", input);
+    const cancelled = cancelOrder("user-1", order.id);
+    expect(cancelled?.status).toBe("cancelled");
+  });
+
+  it("is idempotent — cancelling an already-cancelled order is a no-op", () => {
+    const order = createOrder("user-1", input);
+    cancelOrder("user-1", order.id);
+    const result = cancelOrder("user-1", order.id);
+    expect(result?.status).toBe("cancelled");
+  });
+
+  it("returns undefined for an unknown order id", () => {
+    expect(cancelOrder("user-1", "order-does-not-exist")).toBeUndefined();
+  });
+
+  it("returns undefined when the order belongs to a different user", () => {
+    const order = createOrder("user-1", input);
+    expect(cancelOrder("user-2", order.id)).toBeUndefined();
   });
 });

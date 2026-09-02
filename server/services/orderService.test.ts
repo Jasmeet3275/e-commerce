@@ -1,5 +1,5 @@
 import type { PlaceOrderInput } from "@/lib/validation/checkoutSchema";
-import { placeOrder } from "@/server/services/orderService";
+import { cancelOrder, placeOrder } from "@/server/services/orderService";
 
 const input: PlaceOrderInput = {
   items: [{ productId: "product-1", count: 1 }],
@@ -13,5 +13,17 @@ describe("placeOrder", () => {
     expect(order.status).toBe("placed");
     expect(order.items).toEqual(input.items);
     expect(order.address).toEqual(input.address);
+  });
+});
+
+describe("cancelOrder", () => {
+  it("cancels an order owned by the given user", () => {
+    const order = placeOrder("user-1", input);
+    const cancelled = cancelOrder("user-1", order.id);
+    expect(cancelled?.status).toBe("cancelled");
+  });
+
+  it("returns undefined for an unknown order id", () => {
+    expect(cancelOrder("user-1", "order-does-not-exist")).toBeUndefined();
   });
 });
