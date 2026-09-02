@@ -89,7 +89,7 @@ Unit tests are colocated `*.test.ts` next to source, not a mirrored `__tests__` 
 User      { id, name, avatarUrl, country }
 Product   { id, name, imageUrl, price, discount }
 ProductList { items: Product[], pagination: { limit, offset, currentPage, totalPages, totalItems } }
-ProductDetail { id, name, description, images }
+ProductDetail { id, name, imageUrl, price, discount, description, images }  // extends Product
 CartItem  { productId, count }
 Order     { id, items: CartItem[], address, status: 'placed' | 'cancelled', createdAt }
 Address   { line1, line2?, city, postalCode, country }
