@@ -1,10 +1,13 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 
 import { ProductCard } from "@/components/product/ProductCard";
 import { useColumnCount } from "@/components/product/useColumnCount";
+import { productKeys } from "@/lib/query/keys";
+import { getProductDetail } from "@/lib/services/productService";
 import type { Product } from "@/types/product";
 
 export type VirtualizedProductGridProps = {
@@ -15,7 +18,7 @@ export type VirtualizedProductGridProps = {
 };
 
 const ROW_HEIGHT_ESTIMATE = 320;
-const LOAD_MORE_THRESHOLD_ROWS = 2;
+const LOAD_MORE_THRESHOLD_PX = 2 * ROW_HEIGHT_ESTIMATE;
 
 export function VirtualizedProductGrid({
   products,
@@ -26,6 +29,21 @@ export function VirtualizedProductGrid({
   const columns = useColumnCount();
   const parentRef = useRef<HTMLDivElement>(null);
   const rowCount = Math.ceil(products.length / columns);
+  const queryClient = useQueryClient();
+
+  const prefetchDetail = useCallback(
+    (id: string) => {
+      // prefetchQuery is deprecated in favor of the unified query() method —
+      // same fix as the SSR list page's prefetch (app/products/page.tsx).
+      void queryClient
+        .query({
+          queryKey: productKeys.detail(id),
+          queryFn: () => getProductDetail(id),
+        })
+        .catch(() => undefined);
+    },
+    [queryClient],
+  );
 
   const virtualizer = useVirtualizer({
     count: rowCount,
@@ -35,21 +53,33 @@ export function VirtualizedProductGrid({
   });
 
   const virtualRows = virtualizer.getVirtualItems();
-  const lastVirtualRowIndex = virtualRows[virtualRows.length - 1]?.index;
 
-  useEffect(() => {
-    if (lastVirtualRowIndex === undefined) return;
-    if (
-      lastVirtualRowIndex >= rowCount - LOAD_MORE_THRESHOLD_ROWS &&
-      hasNextPage &&
-      !isFetchingNextPage
-    ) {
+  // Deliberately based on real scroll position, not virtual-item indices:
+  // getVirtualItems() includes overscan, so with a small initial page and a
+  // generous overscan, the "last virtual row" can already be the actual last
+  // row on mount — firing onLoadMore immediately, before the user has
+  // scrolled at all. Scroll position is correct regardless of overscan.
+  const checkLoadMore = useCallback(() => {
+    const scrollElement = parentRef.current;
+    if (!scrollElement || !hasNextPage || isFetchingNextPage) return;
+    const distanceFromBottom =
+      scrollElement.scrollHeight - scrollElement.scrollTop - scrollElement.clientHeight;
+    if (distanceFromBottom < LOAD_MORE_THRESHOLD_PX) {
       onLoadMore();
     }
-  }, [lastVirtualRowIndex, rowCount, hasNextPage, isFetchingNextPage, onLoadMore]);
+  }, [hasNextPage, isFetchingNextPage, onLoadMore]);
+
+  useEffect(() => {
+    checkLoadMore(); // covers the case where the loaded page doesn't fill the viewport at all
+  }, [checkLoadMore, products.length]);
 
   return (
-    <div ref={parentRef} data-testid="product-grid-scroll" className="h-[80vh] overflow-auto">
+    <div
+      ref={parentRef}
+      onScroll={checkLoadMore}
+      data-testid="product-grid-scroll"
+      className="h-[80vh] overflow-auto"
+    >
       <div style={{ height: virtualizer.getTotalSize(), width: "100%", position: "relative" }}>
         {virtualRows.map((virtualRow) => {
           const startIndex = virtualRow.index * columns;
@@ -74,6 +104,7 @@ export function VirtualizedProductGrid({
                   key={product.id}
                   product={product}
                   priority={virtualRow.index === 0 && columnIndex < columns}
+                  onHoverPrefetch={() => prefetchDetail(product.id)}
                 />
               ))}
             </div>
