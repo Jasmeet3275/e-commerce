@@ -24,6 +24,9 @@ export default defineConfig({
         "**/*.d.ts",
         // proxy.ts needs a full NextRequest/NextResponse runtime — covered by E2E.
         "proxy.ts",
+        // React hooks (use*.ts) are render-context-bound like components, even
+        // though they're .ts not .tsx — covered by Cypress component/E2E tests.
+        "**/use*.ts",
         // Type-only declaration files, no runtime logic to cover.
         "types/**",
         "*.config.{ts,js,mjs}",
