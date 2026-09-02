@@ -179,6 +179,27 @@ All via `next/image` — no hand-built pipeline:
 - No application-level image cache in React — consistent with dropping the IndexedDB/LRU cache in §9. The Service Worker's image caching (§9) is a distinct concern: it covers the offline case that CDN/browser caching can't reach, not a duplicate of it.
 - No oversized source downloads — `next/image` requests only the size a given viewport needs.
 
+## 15. Security Hardening — Open Items (Discussion, Not Yet Implemented)
+
+§11 covers what's already in place (headers, CSRF/clickjacking, XSS, no raw payment data). This is a review of what a closer security pass over the actual implementation turns up — gaps and tradeoffs worth a decision before any of it gets built. Nothing in this section is implemented yet.
+
+**Already solid, called out here so it isn't re-litigated:**
+
+- Passwords: `scrypt` (memory-hard) with a random per-user salt and a `timingSafeEqual` comparison (`lib/auth/password.ts`) — no timing side-channel, no weak hash.
+- `.env.local` is gitignored; `.env.example` ships with empty values only.
+- Order/resource ownership: cancelling an order you don't own 404s identically to cancelling one that doesn't exist — no enumeration via status-code difference.
+- Logout's limitation is already called out in code (`app/api/auth/logout/route.ts`): stateless JWTs mean logout only clears the cookie client-side — no server-side revocation list, so an already-issued refresh token stays valid until its own 7-day expiry if it was captured before logout. Real gap, already documented; listed again below because the fix (rotation) is related.
+
+**Open gaps:**
+
+1. **No refresh-token rotation.** `/api/auth/refresh` (`server/services/authService.ts`) issues a new _access_ token but never re-issues the _refresh_ token — the same refresh cookie is valid for its full 7-day lifetime with no reuse detection. Standard fix: rotate the refresh token on every use, store a hash of the latest valid one (or a small denylist) server-side, and treat a reused/old refresh token as a signal to invalidate the whole chain. Needs a decision on where that state lives, since this backend is in-memory/no-DB by design.
+2. **No login rate limiting.** `/api/auth/login` has zero brute-force protection — no attempt counter, no lockout, no backoff. Even an in-memory sliding-window limiter (keyed by IP or email) would close most of this gap within the current no-external-infra constraint.
+3. **CSP still has two `'unsafe-inline'` allowances** (`next.config.ts`), one already flagged with a TODO for a per-request nonce via `proxy.ts`. Worth actually verifying whether `style-src 'unsafe-inline'` is still needed at all — a grep of the app code turns up zero `style={{...}}` usage (Tailwind is class-based throughout), so it may only be there for a Next.js framework/dev-overlay internal, not anything we ship. Needs verification in a real prod build before removing.
+4. **No CSP violation reporting** (`report-uri`/`report-to`) — an actual XSS attempt would currently fail silently client-side with nothing to alert on.
+5. **No dependency/supply-chain scanning in CI** — no `pnpm audit` (or equivalent) step. `pnpm-workspace.yaml`'s `allowBuilds` restricting native postinstall scripts is already a related, existing mitigation; audit-in-CI would be the complementary piece.
+6. **Service Worker cache + shared devices**: `/cart` and `/checkout`'s cached HTML shells are CSR-only (no personalized SSR content baked into what gets cached), so the current design doesn't appear to leak one user's data to the next user of a shared/public browser via the SW's `pages-v1` cache — but this hasn't been deliberately verified, only reasoned about. Worth an explicit test if this ever matters for the threat model.
+7. **PostHog session recording and form inputs**: session recording is on (`lib/analytics/posthog.ts`, `disable_session_recording: false`). Haven't verified whether posthog-js's default input-masking is sufficient for the address form (name, city, postal code) — worth confirming the exact masking config rather than assuming the default is right for this app.
+
 ---
 
 _Next: `CLAUDE.md` — operating instructions/conventions for building this repo with Claude Code._
